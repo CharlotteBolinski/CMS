@@ -13,10 +13,14 @@ url_list.append('http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/W
 url_list.append('http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d08.html')
 
 url_seed = []
+url_seed_filenames = []
 link_set = set()
 
 #check if crawl is complete
 crawl_complete = False
+
+#dictionary for page rank graph
+page_rank_graph = {}
 
 #main method----------------------------------------------------------------
 def main():
@@ -27,6 +31,11 @@ def main():
     #rekursive call until there are no urls left to crawl/ the crawl content list is empty
     if crawl_complete:
         print('website crawl complete')
+
+
+        #return page_rank_graph!
+
+
     else:
 
         #connect all methods
@@ -48,6 +57,9 @@ def downloader(url_seed):
 
     content_list = []
 
+    global url_seed_filenames
+    url_seed_filenames = []
+
     #just true on first run, frontier submitted no data
     if not url_seed:
         url_seed = url_list
@@ -56,6 +68,18 @@ def downloader(url_seed):
     #maybe save everything in one file?
     for url in url_seed:
         content_list.append(urllib.request.urlopen(url).read())
+
+        #-----------------------------------------------------------------------------------------
+        #add seed nodes in the page rank graph
+
+        #split seed url and just get last element which is the site name
+        splitted_url = url.split('/')
+        page_rank_index = splitted_url[-1]
+
+        url_seed_filenames.append(page_rank_index)
+
+        page_rank_graph[page_rank_index] = []
+        #-----------------------------------------------------------------------------------------
 
     return content_list
 
@@ -75,20 +99,34 @@ def parser(content_list):
     linktags_on_sites = []
     link_temporary = []
 
+    #index of previous graph entry------------------------------------------------------------
+    global page_rank_graph
+    global url_seed_filenames
+
+    #-----------------------------------------------------------------------------------------
+
     #search content for a tags and the contained link
-    for content in content_list:
-        #Beautiful Soup object
+    for index_of_seed, content in enumerate(content_list):
+
+        #print('url_seed(index_of_seed):\t\t', url_seed_filenames[index_of_seed])
+
+        #Beautiful Soup object and return list of a-tags and their content
         soup = BeautifulSoup(content)
 
-        #returns list of a-tags and their content
         linktags_on_sites.append(soup.find_all('a'))
 
-    for linktags_one_site in linktags_on_sites:
-        #returns content of hrefs just if link is not already in the set
+
+    for index, linktags_one_site in enumerate(linktags_on_sites):
+
+        link_graph = []
 
         for link in linktags_one_site:
-            link_temporary.append(link.get('href'))
 
+            link_temporary.append(link.get('href'))
+            link_graph.append(link.get('href'))
+
+        #print(url_seed_filenames[index])
+        page_rank_graph[url_seed_filenames[index]] += link_graph
 
     return link_temporary
 
@@ -121,20 +159,16 @@ def frontier(link_temporary):
         #add the seed adresses to the set --- remove this for loop to delete seed links from crawl
         for first_seed_adress in url_list:
 
-            #split seed url
+            #split seed url and returns last element of the splitted seed url
             splitted_url = first_seed_adress.split('/')
-
-            #returns last element of the splitted seed url
             url = splitted_url[-1]
 
             link_set.add(url)
-        #---------------------------
 
     else:
         #compare links in temporary array with set of links (unique link list)
        for link in link_temporary:
            if link not in link_set:
-                #print(link)
                 not_crawled.append('http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/'+link)
                 link_set.add(link)
 
@@ -143,8 +177,10 @@ def frontier(link_temporary):
            crawl_complete = True
 
     #crawl feedback
-    print(sorted(link_set))
-    print(not_crawled)
+    print('page_rank_graph:\t',page_rank_graph)
+    print('link set:\t\t\t', sorted(link_set))
+    print('not crawled:\t\t',not_crawled)
+    print('NEW RUN ++++++++++++++++++++++++++++++++++++++')
 
     return not_crawled
 
