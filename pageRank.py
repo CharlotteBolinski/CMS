@@ -20,7 +20,7 @@ class pageRank(object):
         #Berechne Anzahl von keys in page_rank_graph
         return len(self.page_rank_graph)
 
-    def back_graph(self):
+    #def back_graph(self):
         #for loop page_rank_graph
         #suche in den arrays des dictionaries nach keys des Dictionaries suchen
         #und so back graph erstellen
