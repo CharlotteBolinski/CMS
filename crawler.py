@@ -6,6 +6,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 #set up----------------------------------------------------------------
+#All variables can be used over the whole class
 
 #seeds
 url_list = ['http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/d01.html']
@@ -26,15 +27,11 @@ page_rank_graph = {}
 def main():
 
     global url_seed
-    global crawl_complete
+    global page_rank_graph
 
     #rekursive call until there are no urls left to crawl/ the crawl content list is empty
     if crawl_complete:
         print('website crawl complete')
-
-
-        #return page_rank_graph!
-
 
     else:
 
@@ -55,10 +52,12 @@ def main():
 
 def downloader(url_seed):
 
-    content_list = []
-
+    global page_rank_graph
     global url_seed_filenames
+
+    content_list = []
     url_seed_filenames = []
+
 
     #just true on first run, frontier submitted no data
     if not url_seed:
@@ -99,9 +98,6 @@ def parser(content_list):
     linktags_on_sites = []
     link_temporary = []
 
-    #index of previous graph entry------------------------------------------------------------
-    global page_rank_graph
-    global url_seed_filenames
 
     #-----------------------------------------------------------------------------------------
 
@@ -109,10 +105,9 @@ def parser(content_list):
     for index_of_seed, content in enumerate(content_list):
 
         #print('url_seed(index_of_seed):\t\t', url_seed_filenames[index_of_seed])
-
         #Beautiful Soup object and return list of a-tags and their content
-        soup = BeautifulSoup(content)
 
+        soup = BeautifulSoup(content)
         linktags_on_sites.append(soup.find_all('a'))
 
 
@@ -167,17 +162,17 @@ def frontier(link_temporary):
 
     else:
         #compare links in temporary array with set of links (unique link list)
-       for link in link_temporary:
-           if link not in link_set:
+        for link in link_temporary:
+            if link not in link_set:
                 not_crawled.append('http://people.f4.htw-berlin.de/fileadmin/user_upload/Dozenten/WI-Dozenten/Classen/DAWeb/smdocs/'+link)
                 link_set.add(link)
 
-       #check if crawl is complete, stops recursion if so
-       if not not_crawled:
-           crawl_complete = True
+        #check if crawl is complete, stops recursion if so
+        if not not_crawled:
+            crawl_complete = True
 
     #crawl feedback
-    print('page_rank_graph:\t',page_rank_graph)
+    print('page_rank_graph:\t', page_rank_graph)
     print('link set:\t\t\t', sorted(link_set))
     print('not crawled:\t\t',not_crawled)
     print('NEW RUN ++++++++++++++++++++++++++++++++++++++')
